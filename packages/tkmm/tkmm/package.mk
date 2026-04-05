@@ -21,9 +21,8 @@ PKG_BUILD_FLAGS=" -c Release \
                   -r linux-arm64 \
                   --sc false \
                   --version-suffix ${TKMM_VERSION} \
-                  -p:DebugType=embedded \
-                  -p:IncludeNativeLibrariesForSelfExtract=true \
-                  -p:PublishSingleFile=true \
+                  -p:IncludeNativeLibrariesForSelfExtract=false \
+                  -p:PublishSingleFile=false \
                   -p:Version=${TKMM_VERSION#v} \
                   -p:IsSwitch=true"
 
@@ -37,9 +36,8 @@ make_target() {
   cp -r ${PKG_DIR}/fonts ${INSTALL}/usr/share/tkmm/fonts
   cp -r ${PKG_DIR}/audio ${INSTALL}/usr/share/tkmm/audio
   cp -v ${PKG_DIR}/scripts/* ${INSTALL}/usr/bin/
-  dotnet publish src/Tkmm ${PKG_BUILD_FLAGS} -o ${INSTALL}/tkmm/tmp
-  tar -cvf ${INSTALL}/tkmm/tkmm.tar.gz -C ${INSTALL}/tkmm/tmp .
-  rm -rf ${INSTALL}/tkmm/tmp
+  dotnet publish src/Tkmm ${PKG_BUILD_FLAGS} -o ${INSTALL}/usr/share/tkmm
+  chmod +x ${INSTALL}/usr/share/tkmm/Tkmm
   chmod +x ${INSTALL}/usr/bin/*
 }
 

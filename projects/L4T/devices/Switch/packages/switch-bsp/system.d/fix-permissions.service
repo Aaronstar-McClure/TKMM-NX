@@ -1,6 +1,6 @@
 [Unit]
 Description=Fix permissions on sysfs nodes.
-Before=graphical.target kodi.service retroarch.service
+Before=graphical.target kodi.service retroarch.service tkmm.service
 After=multi-user.target
 After=xorg.service
 

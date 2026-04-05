@@ -307,12 +307,6 @@ if [ "${BOOTLOADER}" = "switch-bootloader" ]; then
 fi
 chmod 0644 ${TARGET_IMG}/${IMAGE_NAME}.kernel
 
-if [ "${DISTRO}" = "TKMM" ]; then
-  tar -xf ${BUILD}/image/system/tkmm/tkmm.tar.gz -C ${BUILD}/image/system/usr/bin
-  rm -rf ${BUILD}/image/system/tkmm
-  chmod +x ${BUILD}/image/system/usr/bin/Tkmm
-fi
-
 # Set mksquashfs options for each compression method
 if [ -z "${SQUASHFS_COMPRESSION_OPTION}" ]; then
   if [ "${SQUASHFS_COMPRESSION:-gzip}" = "gzip" ]; then

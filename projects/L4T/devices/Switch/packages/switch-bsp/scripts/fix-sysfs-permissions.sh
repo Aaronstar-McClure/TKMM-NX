@@ -23,5 +23,17 @@
 /usr/bin/busybox chmod 766 /sys/module/pmc_r2p/parameters/param1
 /usr/bin/busybox chmod 766 /sys/module/pmc_r2p/parameters/param2
 
+/usr/bin/busybox chmod 766 /sys/devices/r2p/action
+/usr/bin/busybox chmod 766 /sys/devices/r2p/entry_id
+/usr/bin/busybox chmod 766 /sys/devices/r2p/param1
+/usr/bin/busybox chmod 766 /sys/devices/r2p/param2
+
 #Brightness
 /usr/bin/busybox chmod 766 /sys/class/backlight/backlight/brightness
+
+#TKMM
+chown -R TKMM:TKMM /storage/.net
+chown -R TKMM:TKMM /storage/.tkmm
+chmod -R 766 /storage/.net
+chmod -R 766 /storage/.tkmm
+chmod +x /storage/.tkmm/Tkmm
