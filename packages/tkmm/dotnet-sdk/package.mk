@@ -2,13 +2,13 @@
 # Copyright (C) 2022-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="dotnet-sdk"
-PKG_VERSION="9.0.305"
+PKG_VERSION="10.0.201"
 PKG_LICENSE="MIT"
 PKG_SITE="https://dotnet.microsoft.com/"
 PKG_LONGDESC=".NET SDK is a set of libraries and tools that developers use to create .NET applications and libraries."
 PKG_TOOLCHAIN="manual"
 PKG_AUTORECONF="no"
-PKG_SHA256="62e61c19b874b69dc0f6b57b1467f89ae2f511b45f9524471adcbee4163e7126"
+PKG_SHA256="d46273b9514a13271dd7b668758622bfb335e7630911631322c42289e84d3962"
 PKG_URL="https://builds.dotnet.microsoft.com/dotnet/Sdk/${PKG_VERSION}/${PKG_NAME}-${PKG_VERSION}-linux-arm64.tar.gz"
 PKG_SOURCE_NAME="${PKG_NAME}-${PKG_VERSION}-${ARCH}.tar.gz"
 
