@@ -9,7 +9,7 @@ jobs:
   build:
     name: Build Images
     permissions: write-all
-    runs-on: bubbles
+    runs-on: self-hosted
     outputs:
       regular_build: ${{ steps.regular_build.outputs.success }}
     
@@ -24,16 +24,16 @@ jobs:
           rm dotnet-install.sh
 
       - name: Update repository
-        working-directory: /home/bubbles/TKMM-NX
+        working-directory: /home/aaronstar/Documents/GitHub/TKMM-NX
         run: |
           git fetch --all --tags -f
           git checkout ${{ github.ref_name }} -f
           
       - name: Build regular image
         id: regular_build
-        working-directory: /home/bubbles/TKMM-NX
+        working-directory: /home/aaronstar/Documents/GitHub/TKMM-NX
         run: |
-          export PATH="/home/bubbles/.dotnet:$PATH"
+          export PATH="/home/aaronstar/Documents/GitHub/.dotnet:$PATH"
           TKMM_VERSION="${{ github.ref_name }}"
           TKMM_VERSION="${TKMM_VERSION%%-rev-nx*}"
           rm -rf releases && mkdir -p releases
@@ -49,10 +49,10 @@ jobs:
 
       - name: Build debug image
         id: debug_build
-        working-directory: /home/bubbles/TKMM-NX
+        working-directory: /home/aaronstar/Documents/GitHub/TKMM-NX
         continue-on-error: true
         run: |
-          export PATH="/home/bubbles/.dotnet:$PATH"
+          export PATH="/home/aaronstar/Documents/GitHub/.dotnet:$PATH"
           TKMM_VERSION="${{ github.ref_name }}"
           TKMM_VERSION="${TKMM_VERSION%%-rev-nx*}"
           rm -rf debug && mkdir -p debug
@@ -84,23 +84,23 @@ jobs:
     name: Upload Images
     needs: [build, release]
     permissions: write-all
-    runs-on: bubbles
+    runs-on: self-hosted
     
     steps:
       - name: Upload to mirror
-        working-directory: /home/bubbles/TKMM-NX
+        working-directory: /home/aaronstar/Documents/GitHub/TKMM-NX
         run: |
           scp -i ~/.ssh/github_runner_sftp_key releases/* ubuntu@repo.tkmm.org:/var/www/html/repo/.tkmm-nx/Releases
           scp -i ~/.ssh/github_runner_sftp_key debug/* ubuntu@repo.tkmm.org:/var/www/html/repo/.tkmm-nx/Debug
 
       - name: Normalize zip file name for GitHub release
-        working-directory: /home/bubbles/TKMM-NX
+        working-directory: /home/aaronstar/Documents/GitHub/TKMM-NX
         run: |
           mv releases/*.system releases/SYSTEM
           mv releases/*.zip releases/tkmm-nx.zip
 
       - name: Create Checksum File
-        working-directory: /home/bubbles/TKMM-NX
+        working-directory: /home/aaronstar/Documents/GitHub/TKMM-NX
         run: |
           md5=($(md5sum -b releases/SYSTEM))
           echo $md5 > releases/SYSTEM.checksum
@@ -112,12 +112,12 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           files: |
-            /home/bubbles/TKMM-NX/releases/SYSTEM
-            /home/bubbles/TKMM-NX/releases/SYSTEM.checksum
-            /home/bubbles/TKMM-NX/releases/tkmm-nx.zip
-            /home/bubbles/TKMM-NX/releases/update.tar
+            /home/aaronstar/Documents/GitHub/TKMM-NX/releases/SYSTEM
+            /home/aaronstar/Documents/GitHub/TKMM-NX/releases/SYSTEM.checksum
+            /home/aaronstar/Documents/GitHub/TKMM-NX/releases/tkmm-nx.zip
+            /home/aaronstar/Documents/GitHub/TKMM-NX/releases/update.tar
 
       - name: Cleanup Folders
         run: |
-          rm -rf /home/bubbles/TKMM-NX/releases
-          rm -rf /home/bubbles/TKMM-NX/debug
+          rm -rf /home/aaronstar/Documents/GitHub/TKMM-NX/releases
+          rm -rf /home/aaronstar/Documents/GitHub/TKMM-NX/debug
