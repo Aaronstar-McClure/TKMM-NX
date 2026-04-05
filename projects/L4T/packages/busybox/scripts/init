@@ -31,7 +31,7 @@ UPDATE_DIR="$UPDATE_ROOT"
 
 UPDATE_KERNEL="KERNEL"
 UPDATE_SYSTEM="SYSTEM"
-IMAGE_KERNEL="@KERNEL_NAME@"
+IMAGE_KERNEL="KERNEL"
 IMAGE_SYSTEM="SYSTEM"
 
 BOOT_STEP="start"
@@ -468,7 +468,7 @@ force_fsck() {
     if [ $(( $FSCK_RET & 8 )) -eq 8 ]; then
       # fubar
       echo "Forced fsck failed. Your system is broken beyond repair"
-      echo "Please re-install @DISTRONAME@"
+      echo "Please re-install TKMM-NX"
       echo ""
       echo "Press enter to shutdown now"
       echo ""
@@ -557,7 +557,7 @@ mount_flash() {
   if [ ! "$FAT32_BOOT" = "yes" ]; then
     mount_part "$boot" "/flash" "ro,noatime"
   else
-    mount_part "$boot" "/flash" "rw,noatime,umask=0000"
+    mount_part "$boot" "/flash" "rw,noatime,umask=0000,shortname=winnt"
   fi
 
   if [ -f /flash/post-flash.sh ]; then
@@ -593,7 +593,35 @@ mount_storage() {
   if [ "$FAT32_BOOT" = "yes" ]; then
     DISTRO=${IMAGE_SYSTEM%'/'*}
     mkdir -p /flash/$DISTRO/storage
-    mount --bind /flash/$DISTRO/storage /storage
+    UPFS_STORAGE_PATH="/run/upfs_storage"
+    if [ ! -d $UPFS_STORAGE_PATH -a "$UPFS_STORAGE" = "yes" -a ! "$UPFS_STORAGE_PATH" = "/storage" ]; then
+      mkdir -p $UPFS_STORAGE_PATH
+    fi
+    if [ "$UPFS_STORAGE" = "yes" -a "$UPFS_PERMISSIONS_IN_STORE" = "yes" ]; then
+
+      /usr/sbin/mount.upfsps /flash/$DISTRO/storage $UPFS_STORAGE_PATH
+      if [ ! -f $UPFS_STORAGE_PATH/.upfs_store_created ]; then
+        /usr/bin/busybox chown -R 0:0 $UPFS_STORAGE_PATH
+        echo "" > $UPFS_STORAGE_PATH/.upfs_store_created
+      fi
+    elif [ "$UPFS_STORAGE" = "yes" ]; then
+      mkdir -p "$UPFS_STORAGE_PATH"_p
+      if [ ! -f /flash/$DISTRO/storage_p.img ]; then
+        dd if=/dev/zero of=/flash/$DISTRO/storage_p.img bs=1M count=30
+        mkfs.ext4 -i 1024 /flash/$DISTRO/storage_p.img
+        CREATE_PERMISSIONS=1
+      fi
+      /usr/bin/busybox mount -o loop /flash/$DISTRO/storage_p.img /run/upfs_storage_p
+      /usr/sbin/mount.upfs "$UPFS_STORAGE_PATH"_p:/flash/$DISTRO/storage $UPFS_STORAGE_PATH
+      if [ "$CREATE_PERMISSIONS" = "1" ]; then
+        /usr/bin/busybox/chown -R 0:0 $UPFS_STORAGE_PATH
+      fi
+      #For now bind mount to ensure updater works without more modifications,
+      #We will handle this in prepare_sysroot
+      /usr/bin/busybox mount --bind $UPFS_STORAGE_PATH /storage
+    else
+      /usr/bin/busybox mount --bind /flash/$DISTRO/storage /storage
+    fi
   elif [ -n "$disk" ]; then
     if [ -n "$OVERLAY" ]; then
       OVERLAY_DIR=$(cat /sys/class/net/eth0/address | tr -d :)
@@ -735,7 +763,7 @@ check_update() {
 
   echo "UPDATE IN PROGRESS"
   echo ""
-  echo "Please do not reboot or turn off your @DISTRONAME@ device!"
+  echo "Please do not reboot or turn off your device!"
   echo ""
 
   if [ -f "$UPDATE_TAR" ]; then
@@ -828,7 +856,7 @@ check_update() {
     # don't make temporary files but instead copy
     # directly from mountpoint to /flash
     UPDATE_DIR=$UPDATE_ROOT/.tmp/mnt
-    UPDATE_KERNEL="@KERNEL_NAME@"
+    UPDATE_KERNEL="KERNEL"
   else
     UPDATE_FILENAME="$UPDATE_DIR/$UPDATE_SYSTEM"
   fi
@@ -969,7 +997,12 @@ prepare_sysroot() {
   progress "Preparing system"
 
   mount --move /flash /sysroot/flash
-  mount --move /storage /sysroot/storage
+  if [ ! "$UPFS_STORAGE" = "yes" ]; then
+    mount --move /storage /sysroot/storage
+  else
+    #properly mount via chroot before switch_root
+    umount /storage
+  fi
 
   if [ ! "$FAT32_BOOT" = "yes" ]; then
     if [ ! -d "/sysroot/usr/lib/kernel-overlays/base/lib/modules/$(uname -r)/" -a -f "/sysroot/usr/lib/systemd/systemd" ]; then
@@ -988,8 +1021,9 @@ prepare_sysroot() {
 # Do init tasks to bring up system
 
 # hide kernel log messages on console
-echo '1 4 1 7' > /proc/sys/kernel/printk
-
+if [ ! "$SPLASH" = "no" ] ;then
+  echo '1 4 1 7' > /proc/sys/kernel/printk
+fi
 # run platform_init script if exists
 if [ -f "./platform_init" ]; then
   ./platform_init
@@ -1091,6 +1125,19 @@ for arg in $(cat /proc/cmdline); do
     fat32-boot)
       FAT32_BOOT="yes"
       ;;
+    upfs-storage)
+      UPFS_STORAGE="yes"
+      ;;
+    upfsps-storage)
+      UPFS_STORAGE="yes"
+      UPFS_PERMISSIONS_IN_STORE="yes"
+      ;;
+     device-has-user)
+      DEVICE_HAS_USER="yes"
+      ;;
+    debug-initramfs)
+      INITRAMFS_DEBUG="yes"
+      ;;
   esac
 done
 
@@ -1153,6 +1200,12 @@ done
 # setup kernel overlays
 /usr/bin/busybox chroot /sysroot /usr/sbin/kernel-overlays-setup
 
+#Deal with user permissions
+
+if [ "$UPFS_STORAGE" = "yes" -a "$DEVICE_HAS_USER" = "yes" ]; then
+  /usr/bin/busybox chroot /sysroot /usr/bin/bindfs --map=0/1000:@0/@1000 /run/upfs_storage /storage
+fi
+
 # tell OE settings addon to disable updates
 if [ "$UPDATE_DISABLED" = "yes" ]; then
   echo "" > /sysroot/dev/.update_disabled
@@ -1172,6 +1225,9 @@ if [ "$STORAGE_NETBOOT" = "yes" ]; then
 fi
 
 # switch to new sysroot and start real init
+if [ "$INITRAMFS_DEBUG" = "yes" ]; then
+   /usr/bin/busybox sh
+fi
 exec /usr/bin/busybox switch_root /sysroot /usr/lib/systemd/systemd $INIT_ARGS
 
 error "switch_root" "Error in initramfs. Could not switch to new root"
