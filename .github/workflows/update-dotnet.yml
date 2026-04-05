@@ -2,6 +2,8 @@ name: Update .NET Packages
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 0 1 * *" # Every 1st of the month at midnight
 
 jobs:
   update-dotnet-packages:

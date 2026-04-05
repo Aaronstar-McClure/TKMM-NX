@@ -32,8 +32,6 @@
 /usr/bin/busybox chmod 766 /sys/class/backlight/backlight/brightness
 
 #TKMM
-chown -R TKMM:TKMM /storage/.net
-chown -R TKMM:TKMM /storage/.tkmm
-chmod -R 766 /storage/.net
-chmod -R 766 /storage/.tkmm
-chmod +x /storage/.tkmm/Tkmm
+/usr/bin/busybox chmod -R 766 /storage/.net
+/usr/bin/busybox chmod -R 766 /storage/.tkmm
+/usr/bin/busybox chmod +x /storage/.tkmm/Tkmm
