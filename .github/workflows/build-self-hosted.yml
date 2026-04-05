@@ -20,7 +20,7 @@ jobs:
           sudo apt upgrade -y
           sudo apt install -y gcc make git unzip wget xz-utils bc gperf zip g++ xfonts-utils xsltproc \
             openjdk-11-jre-headless libparse-yapp-perl libxml-parser-perl patchutils lzop rdfind
-          wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh && chmod +x dotnet-install.sh && ./dotnet-install.sh --channel 9.0
+          wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh && chmod +x dotnet-install.sh && ./dotnet-install.sh --channel 10.0
           rm dotnet-install.sh
 
       - name: Update repository

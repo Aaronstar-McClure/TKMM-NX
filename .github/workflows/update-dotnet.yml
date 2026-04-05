@@ -21,11 +21,11 @@ jobs:
         echo "Fetching latest .NET 9.0 versions from Microsoft feeds..."
         
         # Get latest runtime version from Microsoft's official feed
-        RUNTIME_VERSION=$(curl -s "https://builds.dotnet.microsoft.com/dotnet/Runtime/9.0/latest.version" | tail -n 1 | sed 's/\r$//')
+        RUNTIME_VERSION=$(curl -s "https://builds.dotnet.microsoft.com/dotnet/Runtime/10.0/latest.version" | tail -n 1 | sed 's/\r$//')
         echo "Latest .NET Runtime version: $RUNTIME_VERSION"
         
         # Get latest SDK version from Microsoft's official feed
-        SDK_VERSION=$(curl -s "https://builds.dotnet.microsoft.com/dotnet/Sdk/9.0/latest.version" | tail -n 1 | sed 's/\r$//')
+        SDK_VERSION=$(curl -s "https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0/latest.version" | tail -n 1 | sed 's/\r$//')
         echo "Latest .NET SDK version: $SDK_VERSION"
         
         # Set outputs
